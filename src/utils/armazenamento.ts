@@ -41,7 +41,8 @@ export async function guardarFotoPermanente(uriOriginal: string): Promise<string
     if (!info.exists) {
       await FileSystem.makeDirectoryAsync(pasta, { intermediates: true });
     }
-    const destino = `${pasta}${Date.now()}.jpg`;
+    const sufixo = Math.random().toString(36).slice(2, 8);
+    const destino = `${pasta}${Date.now()}-${sufixo}.jpg`;
     await FileSystem.copyAsync({ from: uriOriginal, to: destino });
     return destino;
   } catch {
