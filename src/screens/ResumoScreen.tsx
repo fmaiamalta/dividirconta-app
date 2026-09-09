@@ -4,6 +4,7 @@ import { Conta } from '../types';
 import { calcularTotais, getTotalConta } from '../utils/calculo';
 import { gerarTextoResumo } from '../utils/partilha';
 import Cabecalho, { ALTURA_CABECALHO } from '../components/Cabecalho';
+import { useIdioma, nomeExibicaoConta } from '../i18n';
 
 interface Props {
   conta: Conta;
@@ -12,66 +13,65 @@ interface Props {
 }
 
 export default function ResumoScreen({ conta, onVoltar, onInicio }: Props) {
+  const { t } = useIdioma();
   const totais = calcularTotais(conta);
   const totalConta = getTotalConta(conta);
-  const totalCalculado = totais.reduce((s, t) => s + t.total, 0);
+  const totalCalculado = totais.reduce((s, grupo) => s + grupo.total, 0);
   const diferenca = totalConta - totalCalculado;
 
   const partilhar = () => {
-    Share.share({ message: gerarTextoResumo(conta, totais) });
+    Share.share({ message: gerarTextoResumo(conta, totais, t) });
   };
 
   return (
     <View style={styles.container}>
       <Cabecalho />
-      <Text style={styles.titulo}>{conta.nome}</Text>
-      <Text style={styles.subtitulo}>Total da conta: {totalConta.toFixed(2)} €</Text>
+      <Text style={styles.titulo}>{nomeExibicaoConta(conta, t)}</Text>
+      <Text style={styles.subtitulo}>{t.resumo.totalConta(totalConta.toFixed(2))}</Text>
 
       <ScrollView style={styles.lista}>
-        {totais.map((t) => (
-          <View key={t.grupoId} style={[styles.cartao, { borderLeftColor: t.cor }]}>
+        {totais.map((grupo) => (
+          <View key={grupo.grupoId} style={[styles.cartao, { borderLeftColor: grupo.cor }]}>
             <View style={styles.cabecalho}>
-              <View style={[styles.corBolinha, { backgroundColor: t.cor }]} />
-              <Text style={styles.nomeGrupo}>{t.nome}</Text>
+              <View style={[styles.corBolinha, { backgroundColor: grupo.cor }]} />
+              <Text style={styles.nomeGrupo}>{grupo.nome}</Text>
             </View>
             <View style={styles.linhaDetalhe}>
-              <Text style={styles.detalheLabel}>Comida</Text>
-              <Text style={styles.detalheValor}>{t.totalComida.toFixed(2)} €</Text>
+              <Text style={styles.detalheLabel}>{t.itens.comida}</Text>
+              <Text style={styles.detalheValor}>{grupo.totalComida.toFixed(2)} €</Text>
             </View>
             <View style={styles.linhaDetalhe}>
-              <Text style={styles.detalheLabel}>Bebida</Text>
-              <Text style={styles.detalheValor}>{t.totalBebida.toFixed(2)} €</Text>
+              <Text style={styles.detalheLabel}>{t.itens.bebida}</Text>
+              <Text style={styles.detalheValor}>{grupo.totalBebida.toFixed(2)} €</Text>
             </View>
-            {t.totalOutro > 0 && (
+            {grupo.totalOutro > 0 && (
               <View style={styles.linhaDetalhe}>
-                <Text style={styles.detalheLabel}>Outro</Text>
-                <Text style={styles.detalheValor}>{t.totalOutro.toFixed(2)} €</Text>
+                <Text style={styles.detalheLabel}>{t.itens.outro}</Text>
+                <Text style={styles.detalheValor}>{grupo.totalOutro.toFixed(2)} €</Text>
               </View>
             )}
             <View style={styles.linhaTotal}>
-              <Text style={styles.totalLabel}>Total a pagar</Text>
-              <Text style={[styles.totalValor, { color: t.cor }]}>{t.total.toFixed(2)} €</Text>
+              <Text style={styles.totalLabel}>{t.resumo.totalAPagar}</Text>
+              <Text style={[styles.totalValor, { color: grupo.cor }]}>{grupo.total.toFixed(2)} €</Text>
             </View>
           </View>
         ))}
 
         {Math.abs(diferenca) > 0.01 && (
-          <Text style={styles.aviso}>
-            Atenção: {diferenca.toFixed(2)} € da conta ainda não está atribuído a ninguém.
-          </Text>
+          <Text style={styles.aviso}>{t.resumo.avisoNaoAtribuido(diferenca.toFixed(2))}</Text>
         )}
       </ScrollView>
 
       <Pressable style={styles.botaoPartilhar} onPress={partilhar}>
-        <Text style={styles.botaoPartilharTexto}>Partilhar resumo</Text>
+        <Text style={styles.botaoPartilharTexto}>{t.resumo.partilharResumo}</Text>
       </Pressable>
 
       <View style={styles.linhaBotoes}>
         <Pressable style={[styles.botaoVoltar, styles.botaoMetade]} onPress={onVoltar}>
-          <Text style={styles.botaoVoltarTexto}>Voltar aos itens</Text>
+          <Text style={styles.botaoVoltarTexto}>{t.resumo.voltarAosItens}</Text>
         </Pressable>
         <Pressable style={[styles.botaoVoltar, styles.botaoMetade]} onPress={onInicio}>
-          <Text style={styles.botaoVoltarTexto}>Início</Text>
+          <Text style={styles.botaoVoltarTexto}>{t.resumo.inicio}</Text>
         </Pressable>
       </View>
     </View>

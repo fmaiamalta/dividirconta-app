@@ -50,7 +50,15 @@ export interface Atribuicao {
 
 export interface Conta {
   id: string;
+  // Nome guardado tal como foi calculado na criação (inclui o "Nova conta
+  // de..." já traduzido nesse momento) — serve de fallback para contas
+  // antigas. Para mostrar o nome atualizado ao idioma corrente, usa
+  // nomeExibicaoConta() em vez deste campo diretamente.
   nome: string;
+  // Nome do modelo de grupos que deu origem a esta conta (texto do
+  // utilizador, nunca traduzido). Undefined em contas sem modelo de
+  // origem (nome genérico) ou guardadas antes deste campo existir.
+  nomeModeloOrigem?: string;
   itens: Item[];
   grupos: Grupo[];
   atribuicoes: Atribuicao[];

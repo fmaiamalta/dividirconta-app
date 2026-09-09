@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
+import { useIdioma } from '../i18n';
 
 // Altura total do cabeçalho fixo, incluindo a margem de segurança do
 // topo. Cada ecrã usa este valor no paddingTop do seu container, para o
@@ -7,6 +8,8 @@ import { View, Text, Image, StyleSheet } from 'react-native';
 export const ALTURA_CABECALHO = 118;
 
 export default function Cabecalho() {
+  const { t, trocarIdioma } = useIdioma();
+
   return (
     <View style={styles.fixo}>
       <Image
@@ -18,6 +21,10 @@ export default function Cabecalho() {
         <Text style={styles.nomeAppDividir}>dividir</Text>
         <Text style={styles.nomeAppConta}>conta</Text>
       </Text>
+      <View style={styles.espacador} />
+      <Pressable style={styles.botaoIdioma} onPress={trocarIdioma}>
+        <Text style={styles.botaoIdiomaTexto}>{t.cabecalho.trocarIdioma}</Text>
+      </Pressable>
     </View>
   );
 }
@@ -44,4 +51,13 @@ const styles = StyleSheet.create({
   nomeApp: { fontSize: 24, fontWeight: '800' },
   nomeAppDividir: { color: '#3D2C25' },
   nomeAppConta: { color: '#E69B74' },
+  espacador: { flex: 1 },
+  botaoIdioma: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e5d9d0',
+  },
+  botaoIdiomaTexto: { fontSize: 12, fontWeight: '700', color: '#3D2C25' },
 });

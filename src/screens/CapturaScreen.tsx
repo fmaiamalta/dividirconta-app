@@ -10,10 +10,13 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Item } from '../types';
 import { analisarConta } from '../utils/analiseFoto';
 import { guardarFotoPermanente, apagarFotoPermanente } from '../utils/armazenamento';
 import Cabecalho, { ALTURA_CABECALHO } from '../components/Cabecalho';
+import { useIdioma } from '../i18n';
 
 interface Props {
   titulo: string;
@@ -21,9 +24,16 @@ interface Props {
   onVoltar: () => void;
 }
 
+interface PdfEscolhido {
+  uri: string;
+  nome: string;
+}
+
 export default function CapturaScreen({ titulo, onItensExtraidos, onVoltar }: Props) {
+  const { t, idioma } = useIdioma();
   const [uriFoto, setUriFoto] = useState<string | null>(null);
   const [uriFotoPersistida, setUriFotoPersistida] = useState<string | undefined>(undefined);
+  const [pdfEscolhido, setPdfEscolhido] = useState<PdfEscolhido | null>(null);
   const [aProcessar, setAProcessar] = useState(false);
 
   const escolherFoto = async (origem: 'camara' | 'galeria') => {
@@ -34,10 +44,8 @@ export default function CapturaScreen({ titulo, onItensExtraidos, onVoltar }: Pr
 
     if (!permissao.granted) {
       Alert.alert(
-        'Permissão necessária',
-        origem === 'camara'
-          ? 'Precisas de dar acesso à câmara para tirar a foto da conta.'
-          : 'Precisas de dar acesso às fotos para escolher a imagem da conta.'
+        t.captura.permissaoTitulo,
+        origem === 'camara' ? t.captura.permissaoCamara : t.captura.permissaoGaleria
       );
       return;
     }
@@ -48,6 +56,8 @@ export default function CapturaScreen({ titulo, onItensExtraidos, onVoltar }: Pr
         : await ImagePicker.launchImageLibraryAsync({ quality: 0.8 });
 
     if (resultado.canceled || resultado.assets.length === 0) return;
+
+    setPdfEscolhido(null);
 
     // Copia a foto para um sítio permanente já aqui, assim que é escolhida,
     // em vez de esperar até depois da análise (que pode demorar vários
@@ -68,35 +78,72 @@ export default function CapturaScreen({ titulo, onItensExtraidos, onVoltar }: Pr
       // "fantasma" que desaparece mais tarde.
       setUriFoto(uriTemporario);
       setUriFotoPersistida(undefined);
-      Alert.alert(
-        'Não consegui guardar a foto',
-        'Vou continuar a analisá-la, mas não vai ficar disponível para veres mais tarde. Os itens ficam guardados na mesma.'
-      );
+      Alert.alert(t.captura.naoGuardouFotoTitulo, t.captura.naoGuardouFotoMsg);
+    }
+  };
+
+  const escolherPdf = async () => {
+    try {
+      const resultado = await DocumentPicker.getDocumentAsync({ type: 'application/pdf' });
+      if (resultado.canceled || resultado.assets.length === 0) return;
+
+      const ficheiro = resultado.assets[0];
+
+      // Ao contrário das fotos (sempre comprimidas antes de enviar), o PDF
+      // vai tal e qual, em base64 (~33% maior). Um ficheiro grande pode
+      // ultrapassar o limite de tamanho do pedido no backend — melhor
+      // avisar já do que deixar a pessoa à espera de 3 tentativas a falhar.
+      const LIMITE_AVISO_BYTES = 3.5 * 1024 * 1024;
+      if (ficheiro.size !== undefined && ficheiro.size > LIMITE_AVISO_BYTES) {
+        Alert.alert(t.captura.pdfGrandeTitulo, t.captura.pdfGrandeMsg);
+      }
+
+      setUriFoto(null);
+      setUriFotoPersistida(undefined);
+      setPdfEscolhido({ uri: ficheiro.uri, nome: ficheiro.name });
+    } catch (erro) {
+      const mensagem = erro instanceof Error ? erro.message : t.analiseFoto.erroDesconhecido;
+      Alert.alert(t.captura.naoConseguiuAbrirPdfTitulo, mensagem);
     }
   };
 
   const processarFoto = async () => {
-    if (!uriFoto) return;
+    if (!uriFoto && !pdfEscolhido) return;
     setAProcessar(true);
 
     try {
-      // Reduz o tamanho da imagem antes de enviar, para o pedido não ficar
-      // demasiado grande e a análise ser mais rápida.
-      const imagemComprimida = await ImageManipulator.manipulateAsync(
-        uriFoto,
-        [{ resize: { width: 1200 } }],
-        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG, base64: true }
-      );
+      let itens: Item[];
 
-      if (!imagemComprimida.base64) {
-        throw new Error('Não foi possível preparar a imagem');
+      if (pdfEscolhido) {
+        // PDFs não passam pelo expo-image-manipulator (é só para imagens)
+        // — vão tal e qual, em base64, para o backend.
+        const base64Pdf = await FileSystem.readAsStringAsync(pdfEscolhido.uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        itens = await analisarConta(base64Pdf, 'application/pdf', idioma, t);
+        // Sem fotoUri para PDFs — não há como mostrar uma miniatura de
+        // um PDF no ecrã Início, por isso a conta fica sem foto associada,
+        // tal como já acontece quando a cópia da foto falha.
+        onItensExtraidos(itens, undefined);
+      } else if (uriFoto) {
+        // Reduz o tamanho da imagem antes de enviar, para o pedido não ficar
+        // demasiado grande e a análise ser mais rápida.
+        const imagemComprimida = await ImageManipulator.manipulateAsync(
+          uriFoto,
+          [{ resize: { width: 1200 } }],
+          { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+        );
+
+        if (!imagemComprimida.base64) {
+          throw new Error(t.analiseFoto.erroPrepararImagem);
+        }
+
+        itens = await analisarConta(imagemComprimida.base64, 'image/jpeg', idioma, t);
+        onItensExtraidos(itens, uriFotoPersistida);
       }
-
-      const itens = await analisarConta(imagemComprimida.base64, 'image/jpeg');
-      onItensExtraidos(itens, uriFotoPersistida);
     } catch (erro) {
-      const mensagem = erro instanceof Error ? erro.message : 'Erro desconhecido';
-      Alert.alert('Não consegui ler a conta', mensagem);
+      const mensagem = erro instanceof Error ? erro.message : t.analiseFoto.erroDesconhecido;
+      Alert.alert(t.captura.naoConseguiuLerTitulo, mensagem);
     } finally {
       setAProcessar(false);
     }
@@ -106,32 +153,35 @@ export default function CapturaScreen({ titulo, onItensExtraidos, onVoltar }: Pr
     <View style={styles.container}>
       <Cabecalho />
       <Pressable style={styles.botaoVoltar} onPress={onVoltar}>
-        <Text style={styles.botaoVoltarTexto}>‹ Voltar</Text>
+        <Text style={styles.botaoVoltarTexto}>{t.comum.voltar}</Text>
       </Pressable>
       <Text style={styles.titulo}>{titulo}</Text>
-      <Text style={styles.subtitulo}>
-        Tira uma foto à conta, ou escolhe uma da galeria.
-      </Text>
+      <Text style={styles.subtitulo}>{t.captura.subtitulo}</Text>
 
       {uriFoto ? (
         <Image source={{ uri: uriFoto }} style={styles.preview} resizeMode="contain" />
+      ) : pdfEscolhido ? (
+        <View style={styles.placeholder}>
+          <Text style={styles.placeholderIconePdf}>📄</Text>
+          <Text style={styles.placeholderTexto}>{t.captura.pdfSelecionado(pdfEscolhido.nome)}</Text>
+        </View>
       ) : (
         <View style={styles.placeholder}>
-          <Text style={styles.placeholderTexto}>Sem foto ainda</Text>
+          <Text style={styles.placeholderTexto}>{t.captura.semFoto}</Text>
         </View>
       )}
 
       {aProcessar ? (
         <View style={styles.aProcessar}>
           <ActivityIndicator size="large" color="#3D2C25" />
-          <Text style={styles.aProcessarTexto}>A ler a conta...</Text>
+          <Text style={styles.aProcessarTexto}>{t.captura.aLerConta}</Text>
         </View>
       ) : (
         <>
           {uriFoto ? (
             <>
               <Pressable style={styles.botaoPrincipal} onPress={processarFoto}>
-                <Text style={styles.botaoPrincipalTexto}>Analisar esta foto</Text>
+                <Text style={styles.botaoPrincipalTexto}>{t.captura.analisarFoto}</Text>
               </Pressable>
               <Pressable
                 style={styles.botaoSecundario}
@@ -141,16 +191,28 @@ export default function CapturaScreen({ titulo, onItensExtraidos, onVoltar }: Pr
                   setUriFotoPersistida(undefined);
                 }}
               >
-                <Text style={styles.botaoSecundarioTexto}>Tirar outra foto</Text>
+                <Text style={styles.botaoSecundarioTexto}>{t.captura.tirarOutraFoto}</Text>
+              </Pressable>
+            </>
+          ) : pdfEscolhido ? (
+            <>
+              <Pressable style={styles.botaoPrincipal} onPress={processarFoto}>
+                <Text style={styles.botaoPrincipalTexto}>{t.captura.analisarPdf}</Text>
+              </Pressable>
+              <Pressable style={styles.botaoSecundario} onPress={() => setPdfEscolhido(null)}>
+                <Text style={styles.botaoSecundarioTexto}>{t.captura.escolherOutroPdf}</Text>
               </Pressable>
             </>
           ) : (
             <>
               <Pressable style={styles.botaoPrincipal} onPress={() => escolherFoto('camara')}>
-                <Text style={styles.botaoPrincipalTexto}>Tirar foto</Text>
+                <Text style={styles.botaoPrincipalTexto}>{t.captura.tirarFoto}</Text>
               </Pressable>
               <Pressable style={styles.botaoSecundario} onPress={() => escolherFoto('galeria')}>
-                <Text style={styles.botaoSecundarioTexto}>Escolher da galeria</Text>
+                <Text style={styles.botaoSecundarioTexto}>{t.captura.escolherGaleria}</Text>
+              </Pressable>
+              <Pressable style={styles.botaoSecundario} onPress={escolherPdf}>
+                <Text style={styles.botaoSecundarioTexto}>{t.captura.importarPdf}</Text>
               </Pressable>
             </>
           )}
@@ -176,8 +238,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
+    paddingHorizontal: 24,
   },
-  placeholderTexto: { color: '#999', fontSize: 14 },
+  placeholderTexto: { color: '#999', fontSize: 14, textAlign: 'center' },
+  placeholderIconePdf: { fontSize: 40, marginBottom: 10 },
   preview: {
     height: 300,
     borderRadius: 14,

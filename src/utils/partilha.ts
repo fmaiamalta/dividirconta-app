@@ -1,22 +1,24 @@
 import { Conta, TotalPorGrupo } from '../types';
+import { Dicionario } from '../i18n/pt';
+import { nomeExibicaoConta } from '../i18n';
 
-export function gerarTextoResumo(conta: Conta, totais: TotalPorGrupo[]): string {
+export function gerarTextoResumo(conta: Conta, totais: TotalPorGrupo[], t: Dicionario): string {
   const linhas: string[] = [];
-  linhas.push(conta.nome);
+  linhas.push(nomeExibicaoConta(conta, t));
   linhas.push('');
 
-  for (const t of totais) {
-    linhas.push(`${t.nome}: ${t.total.toFixed(2)} €`);
-    linhas.push(`  Comida: ${t.totalComida.toFixed(2)} €`);
-    linhas.push(`  Bebida: ${t.totalBebida.toFixed(2)} €`);
-    if (t.totalOutro > 0) {
-      linhas.push(`  Outro: ${t.totalOutro.toFixed(2)} €`);
+  for (const grupo of totais) {
+    linhas.push(`${grupo.nome}: ${grupo.total.toFixed(2)} €`);
+    linhas.push(`  ${t.itens.comida}: ${grupo.totalComida.toFixed(2)} €`);
+    linhas.push(`  ${t.itens.bebida}: ${grupo.totalBebida.toFixed(2)} €`);
+    if (grupo.totalOutro > 0) {
+      linhas.push(`  ${t.itens.outro}: ${grupo.totalOutro.toFixed(2)} €`);
     }
     linhas.push('');
   }
 
-  const totalGeral = totais.reduce((s, t) => s + t.total, 0);
-  linhas.push(`Total: ${totalGeral.toFixed(2)} €`);
+  const totalGeral = totais.reduce((s, grupo) => s + grupo.total, 0);
+  linhas.push(`${t.partilha.total}: ${totalGeral.toFixed(2)} €`);
 
   return linhas.join('\n');
 }

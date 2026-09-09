@@ -10,6 +10,7 @@ import {
   getItensIncompletos,
   getItensIncompletosPorCategoria,
 } from '../utils/calculo';
+import { useIdioma, nomeExibicaoConta } from '../i18n';
 
 interface Props {
   conta: Conta;
@@ -28,6 +29,7 @@ export default function ItemsScreen({
   onRecomecar,
   onVoltarInicio,
 }: Props) {
+  const { t } = useIdioma();
   const [selecionados, setSelecionados] = useState<string[]>([]);
   const [itemParaDividir, setItemParaDividir] = useState<Item | null>(null);
 
@@ -41,15 +43,15 @@ export default function ItemsScreen({
   // em vez de dizer só "faltam 2 itens" sem contexto.
   const descreverFalta = (item: Item): string => {
     const semAtribuicao = !conta.atribuicoes.some((a) => a.itemId === item.id);
-    if (semAtribuicao) return `"${item.nome}" ainda não foi atribuído a nenhum grupo`;
+    if (semAtribuicao) return t.itens.semAtribuicao(item.nome);
     const faltam = getPessoasEmFalta(conta, item);
-    return `"${item.nome}" tem ${faltam} ${faltam === 1 ? 'pessoa' : 'pessoas'} por identificar (comprou-se ${item.quantidade})`;
+    return t.itens.faltamPessoas(item.nome, faltam, item.quantidade);
   };
 
   const tentarVerResumo = () => {
     if (itensIncompletos.length > 0) {
       Alert.alert(
-        'Ainda falta atribuir itens',
+        t.itens.aindaFaltaAtribuirTitulo,
         itensIncompletos.map(descreverFalta).join('\n\n')
       );
       return;
@@ -59,11 +61,11 @@ export default function ItemsScreen({
 
   const confirmarRecomecar = () => {
     Alert.alert(
-      'Recomeçar do zero?',
-      'Perdes a foto atual e tudo o que já atribuíste. Não afeta os grupos que já configuraste.',
+      t.itens.recomecarTitulo,
+      t.itens.recomecarMsg,
       [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Recomeçar', style: 'destructive', onPress: onRecomecar },
+        { text: t.comum.cancelar, style: 'cancel' },
+        { text: t.itens.recomecar, style: 'destructive', onPress: onRecomecar },
       ]
     );
   };
@@ -112,27 +114,27 @@ export default function ItemsScreen({
     <View style={styles.container}>
       <Cabecalho />
       <Pressable style={styles.botaoVoltar} onPress={onVoltarInicio}>
-        <Text style={styles.botaoVoltarTexto}>‹ Voltar</Text>
+        <Text style={styles.botaoVoltarTexto}>{t.comum.voltar}</Text>
       </Pressable>
       <View style={styles.cabecalhoTitulo}>
-        <Text style={styles.titulo}>{conta.nome}</Text>
+        <Text style={styles.titulo} numberOfLines={1} ellipsizeMode="tail">
+          {nomeExibicaoConta(conta, t)}
+        </Text>
         <View style={styles.botoesCabecalho}>
           <Pressable onPress={confirmarRecomecar} style={styles.botaoCabecalho}>
-            <Text style={styles.botaoCabecalhoTexto}>Recomeçar</Text>
+            <Text style={styles.botaoCabecalhoTexto}>{t.itens.recomecar}</Text>
           </Pressable>
           <Pressable onPress={onEditarGrupos} style={styles.botaoCabecalho}>
-            <Text style={styles.botaoCabecalhoTexto}>Grupos</Text>
+            <Text style={styles.botaoCabecalhoTexto}>{t.itens.grupos}</Text>
           </Pressable>
         </View>
       </View>
 
       <ScrollView style={styles.lista}>
         <View style={styles.secaoCabecalho}>
-          <Text style={styles.secaoTitulo}>Comida</Text>
+          <Text style={styles.secaoTitulo}>{t.itens.comida}</Text>
           {incompletosPorCategoria.comida.length > 0 && (
-            <Text style={styles.avisoSecao}>
-              {incompletosPorCategoria.comida.length} por atribuir
-            </Text>
+            <Text style={styles.avisoSecao}>{t.itens.porAtribuir(incompletosPorCategoria.comida.length)}</Text>
           )}
         </View>
         {comida.map((item) => (
@@ -148,11 +150,9 @@ export default function ItemsScreen({
         ))}
 
         <View style={styles.secaoCabecalho}>
-          <Text style={styles.secaoTitulo}>Bebida</Text>
+          <Text style={styles.secaoTitulo}>{t.itens.bebida}</Text>
           {incompletosPorCategoria.bebida.length > 0 && (
-            <Text style={styles.avisoSecao}>
-              {incompletosPorCategoria.bebida.length} por resolver
-            </Text>
+            <Text style={styles.avisoSecao}>{t.itens.porResolver(incompletosPorCategoria.bebida.length)}</Text>
           )}
         </View>
         {bebida.map((item) => (
@@ -170,11 +170,9 @@ export default function ItemsScreen({
         {outro.length > 0 && (
           <>
             <View style={styles.secaoCabecalho}>
-              <Text style={styles.secaoTitulo}>Outro</Text>
+              <Text style={styles.secaoTitulo}>{t.itens.outro}</Text>
               {incompletosPorCategoria.outro.length > 0 && (
-                <Text style={styles.avisoSecao}>
-                  {incompletosPorCategoria.outro.length} por atribuir
-                </Text>
+                <Text style={styles.avisoSecao}>{t.itens.porAtribuir(incompletosPorCategoria.outro.length)}</Text>
               )}
             </View>
             {outro.map((item) => (
@@ -196,9 +194,7 @@ export default function ItemsScreen({
 
       {selecionados.length > 0 && (
         <View style={styles.barraAtribuicao}>
-          <Text style={styles.barraTexto}>
-            {selecionados.length} {selecionados.length === 1 ? 'item selecionado' : 'itens selecionados'}
-          </Text>
+          <Text style={styles.barraTexto}>{t.itens.itensSelecionados(selecionados.length)}</Text>
           <View style={styles.botoesGrupos}>
             {conta.grupos.map((g) => (
               <Pressable
@@ -219,8 +215,8 @@ export default function ItemsScreen({
       >
         <Text style={styles.botaoResumoTexto}>
           {itensIncompletos.length > 0
-            ? `Falta atribuir ${itensIncompletos.length} ${itensIncompletos.length === 1 ? 'item' : 'itens'}`
-            : 'Ver resumo e totais'}
+            ? t.itens.faltaAtribuir(itensIncompletos.length)
+            : t.itens.verResumo}
         </Text>
       </Pressable>
 
@@ -245,9 +241,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
+    gap: 8,
   },
-  titulo: { fontSize: 22, fontWeight: '700', color: '#3D2C25' },
-  botoesCabecalho: { flexDirection: 'row', gap: 8 },
+  titulo: { fontSize: 22, fontWeight: '700', color: '#3D2C25', flexShrink: 1 },
+  botoesCabecalho: { flexDirection: 'row', gap: 8, flexShrink: 0 },
   botaoCabecalho: {
     paddingVertical: 6,
     paddingHorizontal: 12,

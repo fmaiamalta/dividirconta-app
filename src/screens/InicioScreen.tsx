@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView, Image, StyleSheet, Alert } from 'rea
 import { ModeloGrupos, Conta } from '../types';
 import { getItensIncompletos, calcularTotais } from '../utils/calculo';
 import Cabecalho, { ALTURA_CABECALHO } from '../components/Cabecalho';
+import { useIdioma, nomeExibicaoConta } from '../i18n';
 
 interface Props {
   modelos: ModeloGrupos[];
@@ -15,9 +16,9 @@ interface Props {
   onApagarConta: (conta: Conta) => void;
 }
 
-function formatarData(timestamp?: number): string {
+function formatarData(timestamp: number | undefined, locale: string): string {
   if (!timestamp) return '';
-  return new Date(timestamp).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' });
+  return new Date(timestamp).toLocaleDateString(locale, { day: '2-digit', month: '2-digit' });
 }
 
 export default function InicioScreen({
@@ -30,26 +31,27 @@ export default function InicioScreen({
   onAbrirConta,
   onApagarConta,
 }: Props) {
+  const { t, localeData } = useIdioma();
   const contasOrdenadas = [...contas].sort((a, b) => (b.criadaEm ?? 0) - (a.criadaEm ?? 0));
 
   const confirmarApagarModelo = (modelo: ModeloGrupos) => {
     Alert.alert(
-      `Apagar "${modelo.nome}"?`,
-      'Os grupos guardados aqui desaparecem. Não podes desfazer isto.',
+      t.inicio.confirmarApagarModeloTitulo(modelo.nome),
+      t.inicio.confirmarApagarModeloMsg,
       [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Apagar', style: 'destructive', onPress: () => onApagarModelo(modelo) },
+        { text: t.comum.cancelar, style: 'cancel' },
+        { text: t.comum.apagar, style: 'destructive', onPress: () => onApagarModelo(modelo) },
       ]
     );
   };
 
   const confirmarApagarConta = (conta: Conta) => {
     Alert.alert(
-      `Apagar "${conta.nome}"?`,
-      'A foto e tudo o que já atribuíste nesta conta desaparecem. Não podes desfazer isto.',
+      t.inicio.confirmarApagarContaTitulo(nomeExibicaoConta(conta, t)),
+      t.inicio.confirmarApagarContaMsg,
       [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Apagar', style: 'destructive', onPress: () => onApagarConta(conta) },
+        { text: t.comum.cancelar, style: 'cancel' },
+        { text: t.comum.apagar, style: 'destructive', onPress: () => onApagarConta(conta) },
       ]
     );
   };
@@ -61,12 +63,12 @@ export default function InicioScreen({
       <ScrollView style={styles.lista}>
         {contasOrdenadas.length > 0 && (
           <>
-            <Text style={styles.secaoTitulo}>As tuas contas</Text>
+            <Text style={styles.secaoTitulo}>{t.inicio.asTuasContas}</Text>
             {contasOrdenadas.map((conta) => {
               const incompletos = getItensIncompletos(conta);
               const concluida = incompletos.length === 0;
               const total = concluida
-                ? calcularTotais(conta).reduce((s, t) => s + t.total, 0)
+                ? calcularTotais(conta).reduce((s, grupo) => s + grupo.total, 0)
                 : null;
 
               return (
@@ -77,12 +79,14 @@ export default function InicioScreen({
                     <View style={styles.miniaturaVazia} />
                   )}
                   <View style={styles.contaInfo}>
-                    <Text style={styles.nomeConta}>{conta.nome}</Text>
+                    <Text style={styles.nomeConta} numberOfLines={1} ellipsizeMode="tail">
+                      {nomeExibicaoConta(conta, t)}
+                    </Text>
                     <Text style={styles.detalheConta}>
-                      {formatarData(conta.criadaEm)} · {conta.itens.length} itens
+                      {formatarData(conta.criadaEm, localeData)} · {t.inicio.numItens(conta.itens.length)}
                     </Text>
                     <Text style={concluida ? styles.estadoConcluido : styles.estadoPendente}>
-                      {concluida ? `Concluída · ${total!.toFixed(2)} €` : 'Por terminar'}
+                      {concluida ? t.inicio.contaConcluida(total!.toFixed(2)) : t.inicio.contaPendente}
                     </Text>
                   </View>
                   <Pressable
@@ -92,7 +96,7 @@ export default function InicioScreen({
                       confirmarApagarConta(conta);
                     }}
                   >
-                    <Text style={styles.botaoApagarContaTexto}>Apagar</Text>
+                    <Text style={styles.botaoApagarContaTexto}>{t.comum.apagar}</Text>
                   </Pressable>
                 </Pressable>
               );
@@ -100,9 +104,9 @@ export default function InicioScreen({
           </>
         )}
 
-        <Text style={styles.secaoTitulo}>Grupos guardados</Text>
+        <Text style={styles.secaoTitulo}>{t.inicio.gruposGuardados}</Text>
         {modelos.length === 0 && (
-          <Text style={styles.subtitulo}>Ainda não tens nenhum grupo guardado.</Text>
+          <Text style={styles.subtitulo}>{t.inicio.semGrupos}</Text>
         )}
         {modelos.map((modelo) => (
           <Pressable key={modelo.id} style={styles.cartao} onPress={() => onEscolherModelo(modelo)}>
@@ -112,9 +116,7 @@ export default function InicioScreen({
                 {modelo.grupos.map((g) => (
                   <View key={g.id} style={[styles.corBolinha, { backgroundColor: g.cor }]} />
                 ))}
-                <Text style={styles.numGrupos}>
-                  {modelo.grupos.length} {modelo.grupos.length === 1 ? 'grupo' : 'grupos'}
-                </Text>
+                <Text style={styles.numGrupos}>{t.inicio.numGrupos(modelo.grupos.length)}</Text>
               </View>
             </View>
             <View style={styles.cartaoAcoes}>
@@ -125,7 +127,7 @@ export default function InicioScreen({
                   onEditarModelo(modelo);
                 }}
               >
-                <Text style={styles.botaoAcaoTexto}>Editar</Text>
+                <Text style={styles.botaoAcaoTexto}>{t.comum.editar}</Text>
               </Pressable>
               <Pressable
                 style={styles.botaoAcao}
@@ -134,7 +136,7 @@ export default function InicioScreen({
                   confirmarApagarModelo(modelo);
                 }}
               >
-                <Text style={styles.botaoAcaoTextoApagar}>Apagar</Text>
+                <Text style={styles.botaoAcaoTextoApagar}>{t.comum.apagar}</Text>
               </Pressable>
             </View>
           </Pressable>
@@ -144,7 +146,7 @@ export default function InicioScreen({
       </ScrollView>
 
       <Pressable style={styles.botaoSecundario} onPress={onNovoModelo}>
-        <Text style={styles.botaoSecundarioTexto}>+ Nova conta</Text>
+        <Text style={styles.botaoSecundarioTexto}>{t.inicio.novaConta}</Text>
       </Pressable>
     </View>
   );

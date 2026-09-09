@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, Alert } from 'react-native';
 import { Grupo, PALETA_CORES } from '../types';
 import Cabecalho, { ALTURA_CABECALHO } from '../components/Cabecalho';
+import { useIdioma } from '../i18n';
 
 interface Props {
   // Quando definido, mostra o campo de nome no topo — é o modo "guardar
@@ -21,6 +22,7 @@ export default function GruposScreen({
   onCancelar,
   onApagar,
 }: Props) {
+  const { t } = useIdioma();
   const mostrarNome = nomeInicial !== undefined;
   const [nome, setNome] = useState(nomeInicial ?? '');
   const [lista, setLista] = useState<Grupo[]>(grupos);
@@ -46,7 +48,7 @@ export default function GruposScreen({
     const corLivre = PALETA_CORES.find((c) => !corUsada.has(c)) ?? PALETA_CORES[0];
     const novoGrupo: Grupo = {
       id: `grupo-${Date.now()}`,
-      nome: `Grupo ${String.fromCharCode(65 + lista.length)}`,
+      nome: t.gruposEcra.grupoDefaultNome(String.fromCharCode(65 + lista.length)),
       cor: corLivre,
       numPessoas: 1,
     };
@@ -62,11 +64,11 @@ export default function GruposScreen({
   const confirmarApagar = () => {
     if (!onApagar) return;
     Alert.alert(
-      'Apagar esta conta?',
-      'Os grupos guardados aqui desaparecem. Isto não afeta contas que já estejam em curso.',
+      t.gruposEcra.apagarContaTitulo,
+      t.gruposEcra.apagarContaMsg,
       [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Apagar', style: 'destructive', onPress: onApagar },
+        { text: t.comum.cancelar, style: 'cancel' },
+        { text: t.comum.apagar, style: 'destructive', onPress: onApagar },
       ]
     );
   };
@@ -74,20 +76,18 @@ export default function GruposScreen({
   return (
     <View style={styles.container}>
       <Cabecalho />
-      <Text style={styles.titulo}>{mostrarNome ? 'Grupos' : 'Editar grupos'}</Text>
-      <Text style={styles.subtitulo}>
-        Define o nome, a cor e quantas pessoas tem cada grupo.
-      </Text>
+      <Text style={styles.titulo}>{mostrarNome ? t.gruposEcra.tituloGrupos : t.gruposEcra.tituloEditar}</Text>
+      <Text style={styles.subtitulo}>{t.gruposEcra.subtitulo}</Text>
 
       <ScrollView style={styles.lista}>
         {mostrarNome && (
           <View style={styles.cartaoNome}>
-            <Text style={styles.nomeLabel}>Nome desta conta</Text>
+            <Text style={styles.nomeLabel}>{t.gruposEcra.nomeDestaConta}</Text>
             <TextInput
               style={styles.inputNomeConta}
               value={nome}
               onChangeText={setNome}
-              placeholder="ex: Jantar de sábado"
+              placeholder={t.gruposEcra.placeholderNomeConta}
             />
           </View>
         )}
@@ -100,7 +100,7 @@ export default function GruposScreen({
                 style={styles.inputNome}
                 value={g.nome}
                 onChangeText={(texto) => atualizarNome(g.id, texto)}
-                placeholder="Nome do grupo"
+                placeholder={t.gruposEcra.placeholderNomeGrupo}
               />
               <Pressable onPress={() => removerGrupo(g.id)} style={styles.botaoRemover}>
                 <Text style={styles.botaoRemoverTexto}>✕</Text>
@@ -122,7 +122,7 @@ export default function GruposScreen({
             </View>
 
             <View style={styles.linhaPessoas}>
-              <Text style={styles.pessoasLabel}>Nº de pessoas</Text>
+              <Text style={styles.pessoasLabel}>{t.gruposEcra.numPessoas}</Text>
               <View style={styles.stepper}>
                 <Pressable style={styles.stepperBotao} onPress={() => atualizarPessoas(g.id, -1)}>
                   <Text style={styles.stepperBotaoTexto}>−</Text>
@@ -137,12 +137,12 @@ export default function GruposScreen({
         ))}
 
         <Pressable style={styles.botaoAdicionar} onPress={adicionarGrupo}>
-          <Text style={styles.botaoAdicionarTexto}>+ Adicionar grupo</Text>
+          <Text style={styles.botaoAdicionarTexto}>{t.gruposEcra.adicionarGrupo}</Text>
         </Pressable>
 
         {onApagar && (
           <Pressable style={styles.botaoApagar} onPress={confirmarApagar}>
-            <Text style={styles.botaoApagarTexto}>Apagar esta conta</Text>
+            <Text style={styles.botaoApagarTexto}>{t.gruposEcra.apagarContaBotao}</Text>
           </Pressable>
         )}
 
@@ -151,14 +151,14 @@ export default function GruposScreen({
 
       <View style={styles.rodape}>
         <Pressable style={styles.botaoCancelar} onPress={onCancelar}>
-          <Text style={styles.botaoCancelarTexto}>Cancelar</Text>
+          <Text style={styles.botaoCancelarTexto}>{t.comum.cancelar}</Text>
         </Pressable>
         <Pressable
           style={[styles.botaoGuardar, !podeGuardar && styles.botaoDesativado]}
           disabled={!podeGuardar}
           onPress={() => onGuardar(mostrarNome ? nome.trim() : null, lista)}
         >
-          <Text style={styles.botaoGuardarTexto}>Guardar</Text>
+          <Text style={styles.botaoGuardarTexto}>{t.comum.guardar}</Text>
         </Pressable>
       </View>
     </View>

@@ -11,6 +11,8 @@ import {
   apagarConta,
 } from './src/utils/armazenamento';
 import { ajustarAtribuicoesAosGrupos } from './src/utils/calculo';
+import { IdiomaProvider, useIdioma } from './src/i18n';
+import { Dicionario } from './src/i18n/pt';
 import InicioScreen from './src/screens/InicioScreen';
 import CapturaScreen from './src/screens/CapturaScreen';
 import ItemsScreen from './src/screens/ItemsScreen';
@@ -19,12 +21,24 @@ import GruposScreen from './src/screens/GruposScreen';
 
 type Ecra = 'inicio' | 'grupos' | 'grupos-sessao' | 'captura' | 'itens' | 'resumo';
 
-const gruposIniciais: Grupo[] = [
-  { id: 'grupo-a', nome: 'Grupo A', cor: '#E8B08C', numPessoas: 1 },
-  { id: 'grupo-b', nome: 'Grupo B', cor: '#9FD8BE', numPessoas: 1 },
-];
+function criarGruposIniciais(t: Dicionario): Grupo[] {
+  return [
+    { id: 'grupo-a', nome: t.gruposEcra.grupoDefaultNome('A'), cor: '#E8B08C', numPessoas: 1 },
+    { id: 'grupo-b', nome: t.gruposEcra.grupoDefaultNome('B'), cor: '#9FD8BE', numPessoas: 1 },
+  ];
+}
 
 export default function App() {
+  return (
+    <IdiomaProvider>
+      <AppConteudo />
+    </IdiomaProvider>
+  );
+}
+
+function AppConteudo() {
+  const { t } = useIdioma();
+  const gruposIniciais = criarGruposIniciais(t);
   const [aCarregar, setACarregar] = useState(true);
   const [modelos, setModelos] = useState<ModeloGrupos[]>([]);
   const [modeloEmEdicao, setModeloEmEdicao] = useState<ModeloGrupos | null>(null);
@@ -73,7 +87,7 @@ export default function App() {
   const guardarModeloDoFormulario = async (nome: string | null, grupos: Grupo[]) => {
     const modelo: ModeloGrupos = {
       id: modeloEmEdicao?.id ?? `modelo-${Date.now()}`,
-      nome: nome ?? 'Sem nome',
+      nome: nome ?? t.app.semNome,
       grupos,
     };
     const novos = await guardarModelo(modelo);
@@ -82,13 +96,14 @@ export default function App() {
   };
 
   const nomeParaNovaConta = nomeModeloParaNovaConta
-    ? `Nova conta de "${nomeModeloParaNovaConta}"`
-    : 'Nova conta';
+    ? t.app.novaContaDeModelo(nomeModeloParaNovaConta)
+    : t.app.novaConta;
 
   const iniciarComItens = (itens: Item[], fotoUri?: string) => {
     const novaConta: Conta = {
       id: `conta-${Date.now()}`,
       nome: nomeParaNovaConta,
+      nomeModeloOrigem: nomeModeloParaNovaConta || undefined,
       itens,
       grupos: gruposParaNovaConta,
       atribuicoes: [],

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, Pressable, StyleSheet } from 'react-native';
 import { Item, Grupo, Parte } from '../types';
+import { useIdioma } from '../i18n';
 
 interface Props {
   visivel: boolean;
@@ -19,6 +20,7 @@ export default function ModalDividir({
   onConfirmar,
   onCancelar,
 }: Props) {
+  const { t } = useIdioma();
   const [quantidades, setQuantidades] = useState<Record<string, number>>({});
 
   useEffect(() => {
@@ -118,16 +120,14 @@ export default function ModalDividir({
       <View style={styles.fundo}>
         <View style={styles.caixa}>
           <Text style={styles.titulo}>{item.nome}</Text>
-          <Text style={styles.subtitulo}>
-            {valorTotal.toFixed(2)} € no total — quantas pessoas de cada grupo consumiram isto?
-          </Text>
+          <Text style={styles.subtitulo}>{t.modalDividir.subtitulo(valorTotal.toFixed(2))}</Text>
 
           <View style={styles.atalhos}>
             <Pressable style={styles.botaoAtalho} onPress={marcarTodos}>
-              <Text style={styles.botaoAtalhoTexto}>Todos consumiram</Text>
+              <Text style={styles.botaoAtalhoTexto}>{t.modalDividir.todosConsumiram}</Text>
             </Pressable>
             <Pressable style={styles.botaoAtalho} onPress={limparTodos}>
-              <Text style={styles.botaoAtalhoTexto}>Limpar</Text>
+              <Text style={styles.botaoAtalhoTexto}>{t.modalDividir.limpar}</Text>
             </Pressable>
           </View>
 
@@ -159,26 +159,26 @@ export default function ModalDividir({
 
           {item.quantidade > 1 && (
             <Text style={styles.notaUnidades}>
-              {totalPessoas} de {item.quantidade} unidades atribuídas
+              {t.modalDividir.unidadesAtribuidas(totalPessoas, item.quantidade)}
             </Text>
           )}
 
           {totalPessoas > 0 && (
             <Text style={styles.calculo}>
-              {valorPorPessoa.toFixed(2)} € por pessoa (÷ {totalPessoas})
+              {t.modalDividir.porPessoa(valorPorPessoa.toFixed(2), totalPessoas)}
             </Text>
           )}
 
           <View style={styles.botoes}>
             <Pressable style={styles.botaoCancelar} onPress={onCancelar}>
-              <Text style={styles.botaoCancelarTexto}>Cancelar</Text>
+              <Text style={styles.botaoCancelarTexto}>{t.comum.cancelar}</Text>
             </Pressable>
             <Pressable
               style={[styles.botaoConfirmar, totalPessoas === 0 && styles.botaoDesativado]}
               disabled={totalPessoas === 0}
               onPress={confirmar}
             >
-              <Text style={styles.botaoConfirmarTexto}>Confirmar</Text>
+              <Text style={styles.botaoConfirmarTexto}>{t.comum.confirmar}</Text>
             </Pressable>
           </View>
         </View>

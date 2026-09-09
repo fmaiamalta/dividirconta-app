@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Item, Grupo } from '../types';
+import { useIdioma } from '../i18n';
 
 interface Props {
   item: Item;
@@ -19,6 +20,7 @@ export default function ItemRow({
   onToggleSelecionado,
   onPressDividir,
 }: Props) {
+  const { t } = useIdioma();
   const naoAtribuido = gruposAtribuidos.length === 0;
   const incompleto = naoAtribuido || pessoasEmFalta > 0;
   const valorTotal = item.preco * item.quantidade;
@@ -51,12 +53,10 @@ export default function ItemRow({
             ))}
           </View>
         ) : (
-          <Text style={styles.etiquetaAlerta}>Por atribuir</Text>
+          <Text style={styles.etiquetaAlerta}>{t.itemRow.porAtribuir}</Text>
         )}
         {!naoAtribuido && pessoasEmFalta > 0 && (
-          <Text style={styles.etiquetaAlerta}>
-            Faltam {pessoasEmFalta} {pessoasEmFalta === 1 ? 'pessoa' : 'pessoas'} de {item.quantidade}
-          </Text>
+          <Text style={styles.etiquetaAlerta}>{t.itemRow.faltamDe(pessoasEmFalta, item.quantidade)}</Text>
         )}
       </View>
 
@@ -64,7 +64,7 @@ export default function ItemRow({
 
       {onPressDividir && (
         <Pressable style={styles.botaoDividir} onPress={onPressDividir}>
-          <Text style={styles.botaoDividirTexto}>Dividir</Text>
+          <Text style={styles.botaoDividirTexto}>{t.itemRow.dividir}</Text>
         </Pressable>
       )}
     </Pressable>

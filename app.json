@@ -7,9 +7,16 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fmaiamalta.dividirconta",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.fmaiamalta.dividirconta",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#F8F2EA",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -20,6 +27,32 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-status-bar",
+      "expo-localization",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "backgroundColor": "#F8F2EA",
+          "resizeMode": "contain"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "A app precisa da câmara para fotografares o talão da conta.",
+          "photosPermission": "A app precisa de aceder às tuas fotos para importares uma foto do talão já tirada.",
+          "microphonePermission": false
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "a82b7adb-9495-401d-97bb-b4249d5bec64"
+      }
+    },
+    "owner": "fmaiamalta"
   }
 }

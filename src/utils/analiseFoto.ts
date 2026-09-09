@@ -1,5 +1,13 @@
 import { Item, Categoria } from '../types';
 import { URL_BACKEND } from '../config';
+import { Dicionario } from '../i18n/pt';
+import { Idioma } from '../i18n';
+
+// Erros dedicados para os dois casos em que não vale a pena tentar outra
+// vez com a mesma foto — usar instanceof em vez de comparar pedaços de
+// texto da mensagem, que agora pode vir em PT ou EN consoante o pedido.
+class SemItensError extends Error {}
+class NaoEContaError extends Error {}
 
 interface ItemExtraido {
   nome: string;
@@ -11,15 +19,21 @@ interface ItemExtraido {
 interface RespostaAnalise {
   tipoDocumento: string;
   itens: ItemExtraido[];
+  codigo?: string;
   erro?: string;
   detalhes?: string;
 }
 
-async function pedirAnalise(imagemBase64: string, mediaType: string): Promise<Item[]> {
+async function pedirAnalise(
+  imagemBase64: string,
+  mediaType: string,
+  idioma: Idioma,
+  t: Dicionario
+): Promise<Item[]> {
   const resposta = await fetch(URL_BACKEND, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ imagemBase64, mediaType }),
+    body: JSON.stringify({ imagemBase64, mediaType, idioma }),
   });
 
   // Tenta sempre ler o corpo da resposta primeiro, mesmo quando o pedido
@@ -32,20 +46,23 @@ async function pedirAnalise(imagemBase64: string, mediaType: string): Promise<It
   }
 
   if (!resposta.ok) {
-    const mensagemBase = dados?.erro ?? `O servidor respondeu com erro (${resposta.status})`;
+    const mensagemBase = dados?.erro ?? t.analiseFoto.erroServidorStatus(resposta.status);
     throw new Error(dados?.detalhes ? `${mensagemBase}: ${dados.detalhes}` : mensagemBase);
   }
 
   if (!dados) {
-    throw new Error('O servidor devolveu uma resposta vazia');
+    throw new Error(t.analiseFoto.erroRespostaVazia);
   }
 
+  // dados.erro/detalhes vêm do backend, já no idioma pedido.
   if (dados.erro) {
-    throw new Error(dados.detalhes ? `${dados.erro}: ${dados.detalhes}` : dados.erro);
+    const mensagem = dados.detalhes ? `${dados.erro}: ${dados.detalhes}` : dados.erro;
+    if (dados.codigo === 'nao_e_conta') throw new NaoEContaError(mensagem);
+    throw new Error(mensagem);
   }
 
   if (!dados.itens || dados.itens.length === 0) {
-    throw new Error('Não foi possível identificar itens nesta foto');
+    throw new SemItensError(t.analiseFoto.erroSemItens);
   }
 
   return dados.itens.map((item, indice) => ({
@@ -62,22 +79,22 @@ async function pedirAnalise(imagemBase64: string, mediaType: string): Promise<It
 // tentamos até 3 vezes antes de desistir, com uma pequena pausa entre elas.
 export async function analisarConta(
   imagemBase64: string,
-  mediaType: string
+  mediaType: string,
+  idioma: Idioma,
+  t: Dicionario
 ): Promise<Item[]> {
   const tentativasMaximas = 3;
   let ultimoErro: Error | null = null;
 
   for (let tentativa = 1; tentativa <= tentativasMaximas; tentativa++) {
     try {
-      return await pedirAnalise(imagemBase64, mediaType);
+      return await pedirAnalise(imagemBase64, mediaType, idioma, t);
     } catch (erro) {
       ultimoErro = erro instanceof Error ? erro : new Error(String(erro));
       // Não vale a pena repetir se a IA respondeu mas não encontrou itens,
       // ou se disse claramente que a foto não é uma conta legível — isso
       // não muda tentando outra vez com a mesma foto.
-      const semSentidoRepetir =
-        ultimoErro.message.includes('identificar itens') ||
-        ultimoErro.message.includes('não parece ser uma conta');
+      const semSentidoRepetir = erro instanceof SemItensError || erro instanceof NaoEContaError;
       if (semSentidoRepetir) throw ultimoErro;
       if (tentativa < tentativasMaximas) {
         await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -85,5 +102,5 @@ export async function analisarConta(
     }
   }
 
-  throw ultimoErro ?? new Error('Falha desconhecida ao analisar a conta');
+  throw ultimoErro ?? new Error(t.analiseFoto.erroFalhaDesconhecida);
 }
