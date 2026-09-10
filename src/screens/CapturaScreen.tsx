@@ -107,6 +107,17 @@ export default function CapturaScreen({ titulo, onItensExtraidos, onVoltar }: Pr
     }
   };
 
+  // Se já tínhamos copiado a foto para armazenamento permanente e o
+  // utilizador desiste (volta atrás sem analisar nem escolher outra),
+  // o ficheiro ficava para sempre no disco sem nenhuma conta a apontar
+  // para ele — apaga-se aqui, tal como já acontece em "Tirar outra foto".
+  const voltar = () => {
+    if (uriFotoPersistida) {
+      apagarFotoPermanente(uriFotoPersistida);
+    }
+    onVoltar();
+  };
+
   const processarFoto = async () => {
     if (!uriFoto && !pdfEscolhido) return;
     setAProcessar(true);
@@ -152,7 +163,7 @@ export default function CapturaScreen({ titulo, onItensExtraidos, onVoltar }: Pr
   return (
     <View style={styles.container}>
       <Cabecalho />
-      <Pressable style={styles.botaoVoltar} onPress={onVoltar}>
+      <Pressable style={styles.botaoVoltar} onPress={voltar}>
         <Text style={styles.botaoVoltarTexto}>{t.comum.voltar}</Text>
       </Pressable>
       <Text style={styles.titulo}>{titulo}</Text>

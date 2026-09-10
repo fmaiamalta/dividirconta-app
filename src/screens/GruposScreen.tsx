@@ -43,16 +43,23 @@ export default function GruposScreen({
     setLista((prev) => prev.map((g) => (g.id === id ? { ...g, cor } : g)));
   };
 
+  // Tudo calculado a partir de "prev" (não do "lista" de fora), para um
+  // duplo-toque rápido não gerar dois grupos com o mesmo id/nome/cor —
+  // cada chamada vê o resultado da anterior, mesmo que disparadas no
+  // mesmo instante.
   const adicionarGrupo = () => {
-    const corUsada = new Set(lista.map((g) => g.cor));
-    const corLivre = PALETA_CORES.find((c) => !corUsada.has(c)) ?? PALETA_CORES[0];
-    const novoGrupo: Grupo = {
-      id: `grupo-${Date.now()}`,
-      nome: t.gruposEcra.grupoDefaultNome(String.fromCharCode(65 + lista.length)),
-      cor: corLivre,
-      numPessoas: 1,
-    };
-    setLista((prev) => [...prev, novoGrupo]);
+    setLista((prev) => {
+      const corUsada = new Set(prev.map((g) => g.cor));
+      const corLivre = PALETA_CORES.find((c) => !corUsada.has(c)) ?? PALETA_CORES[0];
+      const sufixo = Math.random().toString(36).slice(2, 8);
+      const novoGrupo: Grupo = {
+        id: `grupo-${Date.now()}-${sufixo}`,
+        nome: t.gruposEcra.grupoDefaultNome(String.fromCharCode(65 + prev.length)),
+        cor: corLivre,
+        numPessoas: 1,
+      };
+      return [...prev, novoGrupo];
+    });
   };
 
   const removerGrupo = (id: string) => {
