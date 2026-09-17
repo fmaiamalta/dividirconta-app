@@ -4,26 +4,26 @@
 dividirconta
 
 ## Subtítulo (App Store, máx. 30 caracteres)
-Divide contas em grupo
+Divisão de contas em grupo
 
 ## Descrição curta (Play Store, máx. 80 caracteres)
-Fotografa a conta, a IA extrai os itens, tu divides por grupos.
+Fotografia da conta, extração automática dos itens, divisão por grupos.
 
 ## Descrição completa (Play Store até 4000 car., App Store até 4000 car.)
 
 Chega de fazer contas de cabeça depois do jantar.
 
-Tira uma foto ao talão (ou importa uma foto da galeria, ou um PDF digitalizado) e o dividirconta usa inteligência artificial para reconhecer automaticamente cada item e o respetivo preço — sem teres de escrever nada à mão.
+Ao tirar uma foto do talão (ou importar uma foto da galeria, ou um PDF digitalizado), o dividirconta usa inteligência artificial para reconhecer automaticamente cada item e o respetivo preço, sem necessidade de escrever nada à mão.
 
 Depois é simples:
-• Cria grupos (uma família, um casal, cada pessoa individualmente — o que fizer sentido para a ocasião)
-• Atribui cada item a um grupo com um toque, ou divide um item entre vários grupos quando é partilhado (como uma garrafa de vinho)
-• Vê o total exato que cada grupo tem a pagar, já com comida e bebida separadas
-• Partilha o resumo final por mensagem
+• Criação de grupos (uma família, um casal, cada pessoa individualmente, consoante o que fizer sentido para a ocasião)
+• Atribuição de cada item a um grupo com um toque, ou divisão de um item entre vários grupos quando é partilhado (como uma garrafa de vinho)
+• Visualização do total exato que cada grupo tem a pagar, já com comida e bebida separadas
+• Partilha do resumo final por mensagem
 
-Ideal para jantares em grupo, compras de supermercado partilhadas, viagens, ou qualquer situação em que uma conta tem de ser dividida de forma justa — sem ninguém pagar a mais nem a menos.
+Ideal para jantares em grupo, compras de supermercado partilhadas, viagens, ou qualquer situação em que uma conta tem de ser dividida de forma justa: sem ninguém pagar a mais nem a menos.
 
-Funciona em português e inglês. Os teus grupos guardados ficam disponíveis para reutilizar na próxima vez.
+Disponível em português e inglês. Os grupos guardados ficam disponíveis para reutilizar da próxima vez.
 
 A foto do talão é enviada uma vez para ser analisada e não fica guardada depois disso. Não há contas, não há registo, não há anúncios.
 
