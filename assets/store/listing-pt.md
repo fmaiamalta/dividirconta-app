@@ -25,7 +25,7 @@ Ideal para jantares em grupo, compras de supermercado partilhadas, viagens, ou q
 
 Funciona em português e inglês. Os teus grupos guardados ficam disponíveis para reutilizar na próxima vez.
 
-Os teus dados ficam no teu telemóvel — não há contas, não há registo, não há anúncios.
+A foto do talão é enviada uma vez para ser analisada e não fica guardada depois disso. Não há contas, não há registo, não há anúncios.
 
 ## Palavras-chave (App Store, máx. 100 caracteres, separadas por vírgula)
 dividir conta,split bill,jantar grupo,conta restaurante,dividir despesas,talão,recibo

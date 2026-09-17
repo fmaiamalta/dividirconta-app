@@ -25,7 +25,7 @@ Perfect for group dinners, shared grocery runs, trips, or any time a bill needs 
 
 Works in English and Portuguese. Your saved groups stay ready to reuse next time.
 
-Your data stays on your phone — no accounts, no sign-up, no ads.
+The receipt photo is sent once for analysis and isn't kept afterwards. No accounts, no sign-up, no ads.
 
 ## Keywords (App Store, max 100 characters, comma-separated)
 split bill,divide bill,group dinner,restaurant bill,split expenses,receipt scanner,bill splitter
