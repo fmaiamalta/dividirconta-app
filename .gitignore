@@ -2,3 +2,5 @@ node_modules/
 .expo/
 .DS_Store
 *.log
+*.p8
+google-play-service-account*.json

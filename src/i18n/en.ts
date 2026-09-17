@@ -31,6 +31,7 @@ export const en: Dicionario = {
     confirmarApagarContaTitulo: (nome: string) => `Delete "${nome}"?`,
     confirmarApagarContaMsg:
       "The photo and everything you've already assigned on this bill will be gone. You can't undo this.",
+    desenvolvidoPor: 'Developed by Spiga',
   },
 
   captura: {

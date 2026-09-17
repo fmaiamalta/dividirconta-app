@@ -142,7 +142,7 @@ export default function InicioScreen({
           </Pressable>
         ))}
 
-        <View style={{ height: 20 }} />
+        <Text style={styles.autoria}>{t.inicio.desenvolvidoPor}</Text>
       </ScrollView>
 
       <Pressable style={styles.botaoSecundario} onPress={onNovoModelo}>
@@ -212,4 +212,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   botaoSecundarioTexto: { color: '#3D2C25', fontSize: 14, fontWeight: '700' },
+  autoria: {
+    fontSize: 11,
+    color: '#aaa',
+    textAlign: 'center',
+    marginTop: 24,
+    marginBottom: 20,
+  },
 });

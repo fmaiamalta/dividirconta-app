@@ -27,6 +27,7 @@ export const pt = {
     confirmarApagarContaTitulo: (nome: string) => `Apagar "${nome}"?`,
     confirmarApagarContaMsg:
       'A foto e tudo o que já atribuíste nesta conta desaparecem. Não podes desfazer isto.',
+    desenvolvidoPor: 'Desenvolvido por Spiga',
   },
 
   captura: {
